@@ -2,13 +2,18 @@
 
 #include "geo.h"
 
+#include <algorithm>
 #include <deque>
+#include <iomanip>
+#include <iostream>
 #include <set>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
 
 namespace transport_guide
 {
@@ -20,19 +25,20 @@ namespace transport_guide
 			struct Stop
 			{
 				std::string name_stop_ = {};
-				Coordinates coordinates_ = {};
+				geo::Coordinates coordinates_ = {};
 				std::set<std::string_view> buses = {};
 			};
 			struct Bus
 			{
 				std::string name_bus_ = {};
 				std::vector<Stop*> stops_ = {};
+				bool is_roundtrip_ = false;	// json
 			};
 			struct BusInfo
 			{
-				size_t count_stops = 0;
-				size_t unique_stops = 0;
-				size_t route_length = 0;
+				int count_stops = 0;
+				int unique_stops = 0;
+				int route_length = 0;
 				double curvature = 0.0;
 			};
 
@@ -46,28 +52,34 @@ namespace transport_guide
 				}
 			};
 
-			void AddStop(const std::string& name_stop, const Coordinates& coordinates);	// Добавить остановку
+			void AddStop(const std::string& name_stop, const geo::Coordinates& coordinates);	// Добавить остановку
 
-			void AddBus(const std::string& name_bus, const std::vector<Stop*> stops);	// Добавить маршрут
+			void AddBus(const std::string& name_bus, const std::vector<Stop*> stops, bool is_roundtrip);	// Добавить маршрут
 
-			void AddDistanceBetweenStops(const std::string& name_stop_first, const std::string& name_stop_second, const size_t& distance);	// Добавить расстояние между остановками
+			void SetDistanceBetweenStops(const std::string& name_stop_first, const std::string& name_stop_second, const int& distance);	// Добавить расстояние между остановками
 
 			Stop* FindStop(const std::string& name_stop);	// Поиск остановки по имени
 
 			Bus* FindBus(const std::string& name_bus);	// Поиск маршрута по имени
 
-			size_t GetDistance(const std::pair<Stop*, Stop*>& two_stops);	// Получить дистанцию между 2 остановками
+			int GetDistance(const std::pair<Stop*, Stop*>& two_stops);	// Получить дистанцию между 2 остановками
 
 			BusInfo GetBusInfo(const std::string& name_bus);	// Получение информации о маршруте
 
 			std::set<std::string_view> GetStopInfo(const std::string& name_stop);	// Получение информации об остановке
+
+			std::vector<TransportCatalogue::Bus*> GetSortedBusesByName();
+
+			std::vector<TransportCatalogue::Stop*> GetSortedStopsByName();
+
+			std::vector<geo::Coordinates> GetAllStopCoordinates() const;
 
 		private:
 			std::deque<Stop> stops_;
 			std::unordered_map<std::string_view, Stop*> index_stops_;
 			std::deque<Bus> buses_;
 			std::unordered_map<std::string_view, Bus*> index_buses_;
-			std::unordered_map<std::pair<Stop*, Stop*>, size_t, StopsHasher> distance_;
+			std::unordered_map<std::pair<Stop*, Stop*>, int, StopsHasher> distance_;
 		};
 	}
 }

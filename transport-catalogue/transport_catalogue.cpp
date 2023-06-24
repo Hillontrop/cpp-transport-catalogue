@@ -4,19 +4,19 @@ namespace transport_guide
 {
 	namespace catalogue
 	{
-		void TransportCatalogue::AddStop(const std::string& name_stop, const Coordinates& coordinates)	// Добавить остановку
+		void TransportCatalogue::AddStop(const std::string& name_stop, const geo::Coordinates& coordinates)	// Добавить остановку
 		{
 			stops_.push_back({ name_stop, coordinates });
 			index_stops_[stops_.back().name_stop_] = &stops_.back();
 		}
 
-		void TransportCatalogue::AddBus(const std::string& name_bus, const std::vector<Stop*> stops)	// Добавить маршрут
+		void TransportCatalogue::AddBus(const std::string& name_bus, const std::vector<Stop*> stops, bool is_roundtrip)	// Добавить маршрут
 		{
-			buses_.push_back({ name_bus, stops });
+			buses_.push_back({ name_bus, stops, is_roundtrip });
 			index_buses_[buses_.back().name_bus_] = &buses_.back();
 		}
 
-		void TransportCatalogue::AddDistanceBetweenStops(const std::string& name_stop_first, const std::string& name_stop_second, const size_t& distance)	// Добавить расстояние между остановками
+		void TransportCatalogue::SetDistanceBetweenStops(const std::string& name_stop_first, const std::string& name_stop_second, const int& distance)	// Добавить расстояние между остановками
 		{
 			distance_[{TransportCatalogue::FindStop(name_stop_first), TransportCatalogue::FindStop(name_stop_second)}] = distance;
 		}
@@ -45,7 +45,7 @@ namespace transport_guide
 			}
 		}
 
-		size_t TransportCatalogue::GetDistance(const std::pair<TransportCatalogue::Stop*, TransportCatalogue::Stop*>& two_stops)
+		int TransportCatalogue::GetDistance(const std::pair<TransportCatalogue::Stop*, TransportCatalogue::Stop*>& two_stops)
 		{
 			if (distance_.find(two_stops) == distance_.end())
 			{
@@ -59,14 +59,14 @@ namespace transport_guide
 
 		TransportCatalogue::BusInfo TransportCatalogue::GetBusInfo(const std::string& name_bus)	// Получение информации о маршруте
 		{
-			size_t count_stops = TransportCatalogue::FindBus(name_bus)->stops_.size();
+			int count_stops = static_cast<int>(TransportCatalogue::FindBus(name_bus)->stops_.size());
 			std::unordered_set<std::string_view> unique_stops;
 			unique_stops.insert(TransportCatalogue::FindBus(name_bus)->stops_[count_stops - 1]->name_stop_);
 
-			size_t route_length = 0;
+			int route_length = 0;
 			double geo_route_length = 0.0;
 
-			for (size_t i = 0; i < count_stops - 1; ++i)
+			for (int i = 0; i < count_stops - 1; ++i)
 			{
 				auto first_stop = TransportCatalogue::FindBus(name_bus)->stops_[i];
 				auto second_stop = TransportCatalogue::FindBus(name_bus)->stops_[i + 1];
@@ -102,12 +102,63 @@ namespace transport_guide
 			}
 			double curvature = route_length / geo_route_length;
 
-			return { count_stops, unique_stops.size(), route_length, curvature };
+			return { count_stops, static_cast<int>(unique_stops.size()), route_length, curvature };
 		}
 
 		std::set<std::string_view> TransportCatalogue::GetStopInfo(const std::string& name_stop)	// Получение информации об остановке
 		{
 			return TransportCatalogue::FindStop(name_stop)->buses;
+		}
+
+		std::vector<TransportCatalogue::Bus*> TransportCatalogue::GetSortedBusesByName()
+		{
+			std::vector<TransportCatalogue::Bus*> sorted_buses;
+			sorted_buses.reserve(index_buses_.size());
+
+			for (const auto& busPair : index_buses_)
+			{
+				sorted_buses.push_back(busPair.second);
+			}
+			std::sort(sorted_buses.begin(), sorted_buses.end(),[](const TransportCatalogue::Bus* a, const TransportCatalogue::Bus* b)
+				{
+					return a->name_bus_ < b->name_bus_;
+				});
+
+			return sorted_buses;
+		}
+
+		std::vector<TransportCatalogue::Stop*> TransportCatalogue::GetSortedStopsByName()
+		{
+			std::vector<TransportCatalogue::Stop*> sorted_stops;
+			sorted_stops.reserve(index_stops_.size());
+
+			for (const auto& stopPair : index_stops_)
+			{
+				sorted_stops.push_back(stopPair.second);
+			}
+			std::sort(sorted_stops.begin(), sorted_stops.end(), [](const TransportCatalogue::Stop* a, const TransportCatalogue::Stop* b)
+				{
+					return a->name_stop_ < b->name_stop_;
+				});
+
+			return sorted_stops;
+		}
+
+
+		std::vector<geo::Coordinates> TransportCatalogue::GetAllStopCoordinates() const
+		{
+			std::vector<geo::Coordinates> all_coordinates;
+			all_coordinates.reserve(stops_.size());
+
+			for (const auto& stop : stops_)
+			{
+				if (static_cast<int>(stop.buses.size()) != 0)
+				{
+					all_coordinates.push_back(stop.coordinates_);
+				}
+			}
+			all_coordinates.resize(all_coordinates.size());
+			return all_coordinates;
 		}
 	}
 }
