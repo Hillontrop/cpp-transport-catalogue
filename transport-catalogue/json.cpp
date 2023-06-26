@@ -5,79 +5,51 @@ using namespace std;
 namespace json
 {
 // +++++++++++++++++++++++++++++ class Node begin +++++++++++++++++++++++++++++ //
-    Node::Node(std::nullptr_t) : value_(nullptr)
-    {
-    }
-
-    Node::Node(const Array& array) : value_(array)
-    {
-    }
-
-    Node::Node(const Dict& dict) : value_(dict)
-    {
-    }
-
-    Node::Node(bool boolean) : value_(boolean)
-    {
-    }
-
-    Node::Node(int integer) : value_(integer)
-    {
-    }
-
-    Node::Node(double dbl) : value_(dbl)
-    {
-    }
-
-    Node::Node(const std::string& str) : value_(str)
-    {
-    }
-
     bool Node::IsNull() const
     {
         // Проверка типа при помощи std::holds_alternative().
-        return holds_alternative<std::nullptr_t>(value_);
+        return std::holds_alternative<std::nullptr_t>(*this);
     }
 
     bool Node::IsInt() const
     {
         // Проверка типа при помощи std::holds_alternative().
-        return holds_alternative<int>(value_);
+        return std::holds_alternative<int>(*this);
     }
 
     bool Node::IsDouble() const
     {
         // Проверка типа при помощи std::holds_alternative().
-        return holds_alternative<double>(value_) || holds_alternative<int>(value_);
+        return std::holds_alternative<double>(*this) || std::holds_alternative<int>(*this);
     }
 
     bool Node::IsPureDouble() const
     {
         // Проверка типа при помощи std::holds_alternative().
-        return holds_alternative<double>(value_);
+        return std::holds_alternative<double>(*this);
     }
 
     bool Node::IsString() const
     {
         // Проверка типа при помощи std::holds_alternative().
-        return holds_alternative<std::string>(value_);
+        return std::holds_alternative<std::string>(*this);
     }
 
     bool Node::IsArray() const
     {
         // Проверка типа при помощи std::holds_alternative().
-        return holds_alternative<Array>(value_);
+        return std::holds_alternative<Array>(*this);
     }
 
     bool Node::IsMap() const
     {
         // Проверка типа при помощи std::holds_alternative().
-        return holds_alternative<Dict>(value_);
+        return std::holds_alternative<Dict>(*this);
     }
 
     bool Node::IsBool() const
     {
-        return holds_alternative<bool>(value_);
+        return std::holds_alternative<bool>(*this);
     }
 
     int Node::AsInt() const
@@ -86,7 +58,7 @@ namespace json
         {
             // Когда мы убедились, что variant сейчас хранит int,
             // можно смело брать это значение при помощи std::get.
-            return get<int>(value_);
+            return std::get<int>(*this);
         }
         else
         {
@@ -98,7 +70,7 @@ namespace json
     {
         if (Node::IsBool())
         {
-            return get<bool>(value_);
+            return std::get<bool>(*this);
         }
         else
         {
@@ -110,11 +82,11 @@ namespace json
     {
         if (Node::IsInt())
         {
-            return static_cast<double>(get<int>(value_));
+            return static_cast<double>(std::get<int>(*this));
         }
         else if (IsDouble())
         {
-            return get<double>(value_);
+            return std::get<double>(*this);
         }
         else
         {
@@ -126,7 +98,7 @@ namespace json
     {
         if (Node::IsString())
         {
-            return get<std::string>(value_);
+            return std::get<std::string>(*this);
         }
         else
         {
@@ -138,7 +110,7 @@ namespace json
     {
         if (Node::IsArray())
         {
-            return get<Array>(value_);
+            return std::get<Array>(*this);
         }
         else
         {
@@ -150,17 +122,12 @@ namespace json
     {
         if (Node::IsMap())
         {
-            return get<Dict>(value_);
+            return std::get<Dict>(*this);
         }
         else
         {
             throw std::logic_error("not a dict");
         }
-    }
-
-    const Node::Value& Node::GetValue() const
-    {
-        return value_;
     }
 // _____________________________ class Node end _____________________________ //
 

@@ -12,6 +12,7 @@
 
 int main()
 {
+    //setlocale(LC_ALL,"ru");
     //std::ifstream file("Draw2Case23Input.txt"); // Открытие файла для чтения
     //std::stringstream input;
     //if (file)
@@ -25,8 +26,8 @@ int main()
     //    return 1;
     //}
 
-    //	std::string str = R"()";
-    //	std::istringstream input(str);
+//    	std::string str = R"()";
+//    	std::istringstream input(str);
 
 
 	using namespace transport_guide;

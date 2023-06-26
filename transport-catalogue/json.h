@@ -26,20 +26,10 @@ namespace json
 
 
 // +++++++++++++++++++++++++++++ class Node begin +++++++++++++++++++++++++++++ //
-    class Node
+    class Node final : private std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string>    // Добавлено наследование от variant
     {
     public:
-        using Value = std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string>;
-
-        Node() = default;
-
-        Node(std::nullptr_t);
-        Node(const Array& array);
-        Node(const Dict& dict);
-        Node(bool boolean);
-        Node(int integer);
-        Node(double dbl);
-        Node(const std::string& str);
+        using variant::variant;
 
         bool IsNull() const;
         bool IsInt() const;
@@ -59,21 +49,17 @@ namespace json
 
         bool operator==(const Node& other) const    // Оператор неравенства (==)
         {
-            if (value_.index() != other.value_.index())
+            if ((*this).index() != other.index())
             {
                 return false; // Разные типы значений
             }
-            return value_ == other.value_;
+            return (*this) == other;
         }
 
         bool operator!=(const Node& other) const    // Оператор неравенства (!=)
         {
             return !(*this == other);
         }
-
-        const Value& GetValue() const;
-    private:
-        Value value_;
     };
 // _____________________________ class Node end _____________________________ //
 

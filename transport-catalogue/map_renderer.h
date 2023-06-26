@@ -92,6 +92,10 @@ private:
     double zoom_coeff_ = 0;
 };
 
+void AddRouteOnMap(svg::Document& documents, std::vector<svg::Text>& texts_buses, transport_guide::catalogue::TransportCatalogue::Bus* const& bus, const SphereProjector proj, const MapParameter& parametr, unsigned int& number_color);
+
+void AddStopOnMap(std::vector<svg::Circle>& circles_stops, std::vector<svg::Text>& texts_stops, transport_guide::catalogue::TransportCatalogue::Stop* const& stop, const SphereProjector proj, const MapParameter& parametr);
+
 std::string MapRenderer(transport_guide::catalogue::TransportCatalogue& catalogue, const MapParameter& parametr);
 
 svg::Polyline DrawRoute(const transport_guide::catalogue::TransportCatalogue::Bus* const bus, const MapParameter& parametr, const SphereProjector& proj, unsigned int number_color);

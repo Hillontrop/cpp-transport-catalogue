@@ -8,6 +8,47 @@ bool IsZero(double value)
 }
 
 
+void AddRouteOnMap(svg::Document& documents, std::vector<svg::Text>& texts_buses, transport_guide::catalogue::TransportCatalogue::Bus* const &bus,const SphereProjector proj, const MapParameter& parametr, unsigned int& number_color)
+{
+    if (bus->stops_.size() != 0)   // ≈сли остановки есть
+    {
+        documents.Add(DrawRoute(bus, parametr, proj, number_color));            // добавить маршрут дл€ печати
+
+        svg::Text substrate_bus = DrawSubstrateBus(bus, parametr, proj);
+        texts_buses.push_back(substrate_bus);         // добавить текст 1 остановки дл€ печати
+        svg::Text text_bus = DrawTextBus(bus, parametr, proj, number_color);
+        texts_buses.push_back(text_bus);              // добавить текст 1 остановки дл€ печати
+
+        if (bus->is_roundtrip_ == false && *bus->stops_.begin() != bus->stops_[static_cast<int>(bus->stops_.size()) / 2])
+        {
+            substrate_bus.SetPosition(proj(bus->stops_[static_cast<int>(bus->stops_.size()) / 2]->coordinates_));
+            texts_buses.push_back(std::move(substrate_bus));            // добавить подложку под текст last остановки дл€ печати
+            text_bus.SetPosition(proj(bus->stops_[static_cast<int>(bus->stops_.size()) / 2]->coordinates_));
+            texts_buses.push_back(std::move(text_bus));                 // добавить текст last остановки дл€ печати
+        }
+
+        number_color == parametr.color_palette_.size() - 1 ? number_color = 0 : ++number_color;
+    }
+}
+
+void AddStopOnMap(std::vector<svg::Circle>& circles_stops, std::vector<svg::Text>& texts_stops, transport_guide::catalogue::TransportCatalogue::Stop* const& stop, const SphereProjector proj, const MapParameter& parametr)
+{
+    if (stop->buses.size() != 0)   // ≈сли мфршруты есть
+    {
+        svg::Circle circle;
+
+        circle.SetCenter(proj(stop->coordinates_));
+        circle.SetRadius(parametr.stop_radius_);
+        circle.SetFillColor("white");
+        circles_stops.push_back(circle);
+
+        svg::Text substrate_stop = DrawSubstrateStop(stop, parametr, proj);
+        texts_stops.push_back(substrate_stop);         // добавить текст 1 остановки дл€ печати
+        svg::Text text_stop = DrawTextStop(stop, parametr, proj);
+        texts_stops.push_back(text_stop);              // добавить текст 1 остановки дл€ печати
+    }
+}
+
 std::string MapRenderer(transport_guide::catalogue::TransportCatalogue& catalogue, const MapParameter& parametr)
 {
     std::vector<geo::Coordinates> geo_coords = catalogue.GetAllStopCoordinates();
@@ -25,43 +66,12 @@ std::string MapRenderer(transport_guide::catalogue::TransportCatalogue& catalogu
 
     for (const auto& bus : catalogue.GetSortedBusesByName())
     {
-        if (bus->stops_.size() != 0)   // ≈сли остановки есть
-        {
-            documents.Add(DrawRoute(bus, parametr, proj, number_color));            // добавить маршрут дл€ печати
-
-            svg::Text substrate_bus = DrawSubstrateBus(bus, parametr, proj);
-            texts_buses.push_back(substrate_bus);         // добавить текст 1 остановки дл€ печати
-            svg::Text text_bus = DrawTextBus(bus, parametr, proj, number_color);
-            texts_buses.push_back(text_bus);              // добавить текст 1 остановки дл€ печати
-
-            if (bus->is_roundtrip_ == false && *bus->stops_.begin() != bus->stops_[static_cast<int>(bus->stops_.size()) / 2])
-            {
-                substrate_bus.SetPosition(proj(bus->stops_[static_cast<int>(bus->stops_.size()) / 2]->coordinates_));
-                texts_buses.push_back(std::move(substrate_bus));            // добавить подложку под текст last остановки дл€ печати
-                text_bus.SetPosition(proj(bus->stops_[static_cast<int>(bus->stops_.size()) / 2]->coordinates_));
-                texts_buses.push_back(std::move(text_bus));                 // добавить текст last остановки дл€ печати
-            }
-
-            number_color == parametr.color_palette_.size() - 1 ? number_color = 0 : ++number_color;
-        }
+        AddRouteOnMap(documents, texts_buses, bus, proj, parametr, number_color);
     }
 
     for (const auto& stop : catalogue.GetSortedStopsByName())
     {
-        if (stop->buses.size() != 0)   // ≈сли мфршруты есть
-        {
-            svg::Circle circle;
-
-            circle.SetCenter(proj(stop->coordinates_));
-            circle.SetRadius(parametr.stop_radius_);
-            circle.SetFillColor("white");
-            circles_stops.push_back(circle);
-
-            svg::Text substrate_stop = DrawSubstrateStop(stop, parametr, proj);
-            texts_stops.push_back(substrate_stop);         // добавить текст 1 остановки дл€ печати
-            svg::Text text_stop = DrawTextStop(stop, parametr, proj);
-            texts_stops.push_back(text_stop);              // добавить текст 1 остановки дл€ печати
-        }
+        AddStopOnMap(circles_stops, texts_stops, stop, proj, parametr);
     }
 
    for (const auto&t_b : texts_buses)

@@ -71,6 +71,12 @@ struct DataRequests
     std::vector<StatRequest> stat_request_;
 };
 
+std::vector<BaseRequest> ReaderBaseRequests(const json::Node& data);
+
+std::vector<StatRequest> ReaderStatRequests(const json::Node& data);
+
+MapParameter ReaderRenderSettings(const json::Node& data);
+
 DataRequests ReaderInputCatalogueUpdate(std::istream& input);   // Приняли поток выдали вектор запросов
 
 transport_guide::catalogue::TransportCatalogue& CraftCatalogue(transport_guide::catalogue::TransportCatalogue& catalogue, std::vector<BaseRequest> requests);
