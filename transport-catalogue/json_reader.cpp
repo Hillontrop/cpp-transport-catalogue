@@ -39,7 +39,7 @@ std::vector<BaseRequest> ReaderBaseRequests(const json::Node& data)
         BaseRequest base_request;
         base_request.SetTypeRequest("base_requests");
 
-        for (const auto& [key_type, value] : arr.AsMap()) // Идем по Array[Node] -> Node = Dict{string,Node}       идем по "base_requests"
+        for (const auto& [key_type, value] : arr.AsDict()) // Идем по Array[Node] -> Node = Dict{string,Node}       идем по "base_requests"
         {
             if (key_type == "type")
             {
@@ -59,7 +59,7 @@ std::vector<BaseRequest> ReaderBaseRequests(const json::Node& data)
             }
             else if (key_type == "road_distances")
             {
-                for (const auto& [to_stop_name_, distances] : value.AsMap())
+                for (const auto& [to_stop_name_, distances] : value.AsDict())
                 {
                     base_request.road_distances[to_stop_name_] = distances.AsInt();
                 }
@@ -94,7 +94,7 @@ std::vector<StatRequest> ReaderStatRequests(const json::Node& data)
         StatRequest stat_request;
         stat_request.SetTypeRequest("stat_requests");
 
-        for (const auto& [key_type, value] : arr.AsMap()) // Идем по Array[Node] -> Node = Dict{string,Node}       идем по "base_requests"
+        for (const auto& [key_type, value] : arr.AsDict()) // Идем по Array[Node] -> Node = Dict{string,Node}       идем по "base_requests"
         {
             if (key_type == "id")
             {
@@ -121,7 +121,7 @@ std::vector<StatRequest> ReaderStatRequests(const json::Node& data)
 MapParameter ReaderRenderSettings(const json::Node& data)
 {
     MapParameter parametrs;
-    for (const auto& [key_type, value] : data.AsMap()) // Идем по Dict{string,Node} 
+    for (const auto& [key_type, value] : data.AsDict()) // Идем по Dict{string,Node} 
     {
         if (key_type == "width")
         {
@@ -265,10 +265,10 @@ DataRequests ReaderInputCatalogueUpdate(std::istream& input)   // Приняли поток 
 {
     DataRequests queue_request;
 
-    json::Document doc = json::load::Load(input);       // Загрузили документ
+    json::Document doc = json::Load(input);       // Загрузили документ
     json::Node node = doc.GetRoot();                    // Получили общий Node
 
-    for (const auto& [type_request, data] : node.AsMap()) // Идем по Dict{string,Node} -> Node = Array[Node]
+    for (const auto& [type_request, data] : node.AsDict()) // Идем по Dict{string,Node} -> Node = Array[Node]
     {
         if (type_request == "base_requests")     // Узнаем вид запрос/добав инфо                             "stat_requests" или "base_requests"
         {

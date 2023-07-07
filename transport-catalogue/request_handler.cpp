@@ -1,72 +1,68 @@
 #include "request_handler.h"
 
-std::string PrintAnswer(const json::Node& node)
-{
-	std::ostringstream out;
-	json::print::Print(json::Document{ node }, out);
-	return out.str();
-}
-
-
 void RequestHandler(transport_guide::catalogue::TransportCatalogue& catalogue, std::vector<StatRequest> requests, const std::string& map_to_string)
 {
-	json::Array arr;
+	json::Builder builder;
+	builder.StartArray();
+
 
 	for (const auto& request : requests)
 	{
 		if (request.GetType() == "Bus")
 		{
-			json::Dict dict;
 			if (catalogue.FindBus(request.GetName()) == nullptr)
 			{
-				dict["request_id"] = request.id;
-				dict["error_message"] = std::string("not found");
+				builder.StartDict()
+					.Key("request_id").Value(request.id)
+					.Key("error_message").Value("not found")
+					.EndDict();
 			}
 			else
 			{
 				transport_guide::catalogue::TransportCatalogue::BusInfo bus_info = catalogue.GetBusInfo(request.GetName());
-				dict["curvature"] = bus_info.curvature;
-				dict["request_id"] = request.id;
-				dict["route_length"] = bus_info.route_length;
-				dict["stop_count"] = bus_info.count_stops;
-				dict["unique_stop_count"] = bus_info.unique_stops;
+
+				builder.StartDict()
+					.Key("curvature").Value(bus_info.curvature)
+					.Key("request_id").Value(request.id)
+					.Key("route_length").Value(bus_info.route_length)
+					.Key("stop_count").Value(bus_info.count_stops)
+					.Key("unique_stop_count").Value(bus_info.unique_stops)
+					.EndDict();
 			}
-			arr.push_back(dict);
 		}
 		else if (request.GetType() == "Stop")
 		{
-			json::Dict dict;
 			if (catalogue.FindStop(request.GetName()) == nullptr)
 			{
-				dict["request_id"] = request.id;
-				dict["error_message"] = std::string("not found");
+				builder.StartDict()
+					.Key("request_id").Value(request.id)
+					.Key("error_message").Value("not found")
+					.EndDict();
 			}
 			else
 			{
 				std::set<std::string_view> stop_info = catalogue.GetStopInfo(request.GetName());
-				json::Array buses;
+
+				builder.StartDict().Key("buses").StartArray();
 
 				for (const auto& bus : stop_info)
 				{
-					buses.push_back(static_cast<std::string>(bus));
+					builder.Value(static_cast<std::string>(bus));
 				}
-
-				dict["buses"] = buses;
-				dict["request_id"] = request.id;
+				builder.EndArray().Key("request_id").Value(request.id).EndDict();
 			}
-			arr.push_back(dict);
 		}
 		else if (request.GetType() == "Map")
 		{
-			json::Dict dict;
-			dict["map"] = map_to_string;
-			dict["request_id"] = request.id;
-			arr.push_back(dict);
+			builder.StartDict().Key("map").Value(map_to_string).Key("request_id").Value(request.id).EndDict();
 		}
 		else
 		{
 			throw std::logic_error("request type not found");
 		}
 	}
-	std::cout << PrintAnswer(arr) << std::endl;;
+	builder.EndArray();
+
+	json::Print(json::Document{ builder.Build() }, std::cout);
+	std::cout << std::endl;
 }

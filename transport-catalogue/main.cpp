@@ -13,7 +13,7 @@
 int main()
 {
     //setlocale(LC_ALL,"ru");
-    //std::ifstream file("Draw2Case23Input.txt"); // Открытие файла для чтения
+    //std::ifstream file("s10_final_opentest_1.txt"); // Открытие файла для чтения
     //std::stringstream input;
     //if (file)
     //{
