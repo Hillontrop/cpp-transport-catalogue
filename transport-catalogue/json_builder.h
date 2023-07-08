@@ -6,15 +6,13 @@
 
 namespace json
 {
-	class Builder
-	{
+    class Builder
+    {
     private:
         class BaseContext;
         class DictItemContext;
         class ArrayItemContext;
         class KeyItemContext;
-        class ValueKeyContext;
-        class ValueArrayContext;
     public:
         BaseContext EndArray();
         BaseContext EndDict();
@@ -52,7 +50,7 @@ namespace json
             {
                 return builder_.StartDict();
             }
-            
+
             KeyItemContext Key(std::string key)
             {
                 return builder_.Key(key);
@@ -87,7 +85,7 @@ namespace json
             BaseContext StartDict() = delete;
             Node Build() = delete;
         };
-        
+
         class ArrayItemContext : public BaseContext
         {
         public:
@@ -96,7 +94,7 @@ namespace json
             }
 
             template<typename T>
-            ValueArrayContext Value(T value)
+            ArrayItemContext Value(T value)
             {
                 return builder_.Value(value);
             }
@@ -114,7 +112,7 @@ namespace json
             }
 
             template<typename T>
-            ValueKeyContext Value(T value)
+            DictItemContext Value(T value)
             {
                 return builder_.Value(value);
             }
@@ -124,47 +122,13 @@ namespace json
             BaseContext EndDict() = delete;
             Node Build() = delete;
         };
- 
-        class ValueKeyContext : public BaseContext
-        {
-        public:
-            ValueKeyContext(BaseContext base) : BaseContext(base)
-            {
-            }
 
-            template<typename T>
-            BaseContext Value(T value) = delete;
-
-            BaseContext StartArray() = delete;
-            BaseContext EndArray() = delete;
-            Node Build() = delete;
-        };
-
-        class ValueArrayContext : public BaseContext
-        {
-        public:
-            ValueArrayContext(BaseContext base) : BaseContext(base)
-            {
-            }
-
-            template<typename T>
-            ValueArrayContext Value(T value)
-            {
-                return builder_.Value(value);
-            }
-
-            BaseContext Key(std::string key) = delete;
-            BaseContext EndDict() = delete;
-            Node Build() = delete;
-
-        };
-
-	private:
-		Node root_;
-		std::vector<Node*> nodes_stack_;
+    private:
+        Node root_;
+        std::vector<Node*> nodes_stack_;
         std::string current_key_;
         bool availability_key_ = false;
-	};
+    };
 
     template<typename T>
     Builder::BaseContext Builder::Value(T value)
@@ -187,13 +151,13 @@ namespace json
             dict.emplace(current_key_, std::move(value));
             current_key_.clear();
             availability_key_ = false;
-            return Builder::ValueKeyContext(*this);
+            return Builder::DictItemContext(*this);
         }
         else if (nodes_stack_.back()->IsArray())
         {
             json::Array& array = std::get<json::Array>(nodes_stack_.back()->GetValue());
             array.emplace_back(std::move(value));
-            return Builder::ValueArrayContext(*this);
+            return Builder::ArrayItemContext(*this);
         }
         else
         {
