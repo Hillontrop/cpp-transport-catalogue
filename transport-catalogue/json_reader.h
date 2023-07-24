@@ -45,6 +45,8 @@ class StatRequest : public Request
 {
 public:
     int id;
+    std::string from_stop;
+    std::string to_stop;
 };
 
 struct MapParameter
@@ -63,11 +65,11 @@ struct MapParameter
     std::vector<svg::Color> color_palette_;
 };
 
-
 struct DataRequests
 {
     std::vector<BaseRequest> base_request_;
     MapParameter parametr_;
+    transport_guide::catalogue::RoutingSettings routing_settings_;
     std::vector<StatRequest> stat_request_;
 };
 
@@ -77,8 +79,8 @@ std::vector<StatRequest> ReaderStatRequests(const json::Node& data);
 
 MapParameter ReaderRenderSettings(const json::Node& data);
 
-DataRequests ReaderInputCatalogueUpdate(std::istream& input);   // Приняли поток выдали вектор запросов
+DataRequests ReaderInputCatalogueUpdate(std::istream& input);   
 
-transport_guide::catalogue::TransportCatalogue& CraftCatalogue(transport_guide::catalogue::TransportCatalogue& catalogue, std::vector<BaseRequest> requests);
+transport_guide::catalogue::TransportCatalogue& BuildCatalogue(transport_guide::catalogue::TransportCatalogue& catalogue, const std::vector<BaseRequest>& requests, const transport_guide::catalogue::RoutingSettings& routing_settings);
 
 std::vector<transport_guide::catalogue::TransportCatalogue::Stop*> SplitIntoStops(transport_guide::catalogue::TransportCatalogue& catalogue, const std::vector<std::string>& stops, bool is_roundtrip);

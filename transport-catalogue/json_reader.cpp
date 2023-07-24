@@ -108,6 +108,14 @@ std::vector<StatRequest> ReaderStatRequests(const json::Node& data)
             {
                 stat_request.SetName(value.AsString());
             }
+            else if (key_type == "from")
+            {
+                stat_request.from_stop = value.AsString();
+            }
+            else if (key_type == "to")
+            {
+                stat_request.to_stop = value.AsString();
+            }
             else
             {
                 throw json::ParsingError("Parsing error");
@@ -216,7 +224,7 @@ MapParameter ReaderRenderSettings(const json::Node& data)
         }
         else if (key_type == "color_palette")
         {
-            for (const auto& color : value.AsArray()) // Идем по Dict{string,Node} 
+            for (const auto& color : value.AsArray())
             {
                 if (color.IsString())
                 {
@@ -260,6 +268,28 @@ MapParameter ReaderRenderSettings(const json::Node& data)
     return parametrs;
 }
 
+transport_guide::catalogue::RoutingSettings ReaderRoutingSettings(const json::Node& data)
+{
+    transport_guide::catalogue::RoutingSettings routing_settings;
+    static const double PARAMETER_FROM_km_h_TO_m_min = 1000.0 / 60.0;        // Перевод из км/ч в м/мин
+    for (const auto& [key_type, value] : data.AsDict()) // Идем по Dict{string,Node} 
+    {
+        if (key_type == "bus_wait_time")
+        {
+            routing_settings.bus_wait_time_ = value.AsInt();
+        }
+        else if (key_type == "bus_velocity")
+        {
+            routing_settings.bus_velocity_ = value.AsInt() * PARAMETER_FROM_km_h_TO_m_min;
+        }
+        else
+        {
+            throw json::ParsingError("Parsing error");
+        }
+    }
+    return routing_settings;
+}
+
 
 DataRequests ReaderInputCatalogueUpdate(std::istream& input)   // Приняли поток выдали вектор запросов
 {
@@ -292,6 +322,10 @@ DataRequests ReaderInputCatalogueUpdate(std::istream& input)   // Приняли поток 
         {
             queue_request.parametr_ = std::move(ReaderRenderSettings(data));
         }
+        else if (type_request == "routing_settings")
+        {
+            queue_request.routing_settings_ = std::move(ReaderRoutingSettings(data));
+        }
         else
         {
             throw json::ParsingError("Parsing error");
@@ -300,7 +334,7 @@ DataRequests ReaderInputCatalogueUpdate(std::istream& input)   // Приняли поток 
     return queue_request;
 }
 
-transport_guide::catalogue::TransportCatalogue& CraftCatalogue(transport_guide::catalogue::TransportCatalogue& catalogue, std::vector<BaseRequest> requests)
+transport_guide::catalogue::TransportCatalogue& BuildCatalogue(transport_guide::catalogue::TransportCatalogue& catalogue, const std::vector<BaseRequest>& requests, const transport_guide::catalogue::RoutingSettings& routing_settings)
 {
     for (const auto& base_requests : requests)
     {
@@ -333,6 +367,7 @@ transport_guide::catalogue::TransportCatalogue& CraftCatalogue(transport_guide::
             }
         }
     }
+    catalogue.SetRoutingSettings(routing_settings);
     return catalogue;
 }
 
@@ -347,8 +382,8 @@ std::vector<transport_guide::catalogue::TransportCatalogue::Stop*> SplitIntoStop
 
     if (is_roundtrip == false)
     {
-        const size_t stops_count = stops.size();        // 3
-        for (size_t i = stops_count - 1; i != 0;)        // i = 1 i = 0
+        const size_t stops_count = stops.size();
+        for (size_t i = stops_count - 1; i != 0;)
         {
             --i;
             stops_.push_back(stops_[i]);

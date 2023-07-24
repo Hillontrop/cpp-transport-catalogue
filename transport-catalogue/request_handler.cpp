@@ -5,6 +5,9 @@ void RequestHandler(transport_guide::catalogue::TransportCatalogue& catalogue, s
 	json::Builder builder;
 	builder.StartArray();
 
+	const graph::DirectedWeightedGraph<double>& graph = catalogue.GetGraph();
+	graph::Router router(graph);
+
 
 	for (const auto& request : requests)
 	{
@@ -55,6 +58,39 @@ void RequestHandler(transport_guide::catalogue::TransportCatalogue& catalogue, s
 		else if (request.GetType() == "Map")
 		{
 			builder.StartDict().Key("map").Value(map_to_string).Key("request_id").Value(request.id).EndDict();
+		}
+		else if (request.GetType() == "Route")
+		{
+			auto route = router.BuildRoute(catalogue.FindStop(request.from_stop)->id_, catalogue.FindStop(request.to_stop)->id_);
+			if (!route.has_value())
+			{
+				builder.StartDict()
+					.Key("request_id").Value(request.id)
+					.Key("error_message").Value("not found")
+					.EndDict();
+			}
+			else
+			{
+				builder.StartDict()
+					.Key("request_id").Value(request.id)
+					.Key("total_time").Value(route->weight)
+					.Key("items").StartArray();
+
+				for (const auto& edge : route->edges)
+				{
+					builder.StartDict()
+						.Key("stop_name").Value(std::string{ graph.GetEdge(edge).info_edge.stop_name_from })
+						.Key("time").Value(catalogue.GetRoutingSettings().bus_wait_time_)
+						.Key("type").Value("Wait")
+						.EndDict();
+					builder.StartDict().Key("bus").Value(std::string{ graph.GetEdge(edge).info_edge.name_bus })
+						.Key("span_count").Value(graph.GetEdge(edge).info_edge.span_count)
+						.Key("time").Value(graph.GetEdge(edge).weight - catalogue.GetRoutingSettings().bus_wait_time_)
+						.Key("type").Value("Bus")
+						.EndDict();
+				}
+				builder.EndArray().EndDict();
+			}
 		}
 		else
 		{

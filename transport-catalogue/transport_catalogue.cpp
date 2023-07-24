@@ -6,7 +6,8 @@ namespace transport_guide
 	{
 		void TransportCatalogue::AddStop(const std::string& name_stop, const geo::Coordinates& coordinates)	// Добавить остановку
 		{
-			stops_.push_back({ name_stop, coordinates });
+			size_t id = stops_.empty() ? 0 : (stops_.back().id_ + 1);
+			stops_.push_back({ id, name_stop, coordinates });
 			index_stops_[stops_.back().name_stop_] = &stops_.back();
 		}
 
@@ -144,7 +145,6 @@ namespace transport_guide
 			return sorted_stops;
 		}
 
-
 		std::vector<geo::Coordinates> TransportCatalogue::GetAllStopCoordinates() const
 		{
 			std::vector<geo::Coordinates> all_coordinates;
@@ -159,6 +159,54 @@ namespace transport_guide
 			}
 			all_coordinates.resize(all_coordinates.size());
 			return all_coordinates;
+		}
+
+		void TransportCatalogue::BuildGraph()
+		{
+			graph::DirectedWeightedGraph<double> graph(stops_.size());
+
+			for (const auto& [name_bus, info_bus] : index_buses_)
+			{
+				std::vector<int> distance_between_stops;
+				for (size_t i = 0; i < info_bus->stops_.size() - 1; ++i)
+				{
+					distance_between_stops.push_back(GetDistance({ info_bus->stops_[i], info_bus->stops_[i + 1] }));
+				}
+
+				for (size_t i = 0; i < info_bus->stops_.size(); ++i)
+				{
+					for (size_t j = i; j < info_bus->stops_.size(); ++j)
+					{
+						int span_count = j - i;
+
+						int road_distances = std::accumulate(distance_between_stops.begin() + i, distance_between_stops.begin() + j, 0);
+
+						graph::Edge<double> enge_bus{ { name_bus, span_count, info_bus->stops_[i]->name_stop_, info_bus->stops_[j]->name_stop_ }, info_bus->stops_[i]->id_,info_bus->stops_[j]->id_,
+							(road_distances / GetRoutingSettings().bus_velocity_) + GetRoutingSettings().bus_wait_time_ };
+
+						graph.AddEdge(std::move(enge_bus));
+					}
+				}
+				graph::Edge<double> enge_bus{ { name_bus, 1, info_bus->stops_[info_bus->stops_.size() - 1]->name_stop_, info_bus->stops_[0]->name_stop_}, info_bus->stops_[info_bus->stops_.size() - 1]->id_,info_bus->stops_[0]->id_,
+					GetRoutingSettings().bus_wait_time_ };
+				graph.AddEdge(std::move(enge_bus));
+			}
+			graph_ = std::move(graph);
+		}
+
+		const graph::DirectedWeightedGraph<double>& TransportCatalogue::GetGraph() const
+		{
+			return graph_;
+		}
+
+		void TransportCatalogue::SetRoutingSettings(RoutingSettings routing_settings)
+		{
+			routing_settings_ = std::move(routing_settings);
+		}
+
+		const RoutingSettings& TransportCatalogue::GetRoutingSettings() const
+		{
+			return routing_settings_;
 		}
 	}
 }

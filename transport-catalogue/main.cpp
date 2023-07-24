@@ -35,7 +35,8 @@ int main()
 	catalogue::TransportCatalogue catalogue;
 
 	DataRequests query = ReaderInputCatalogueUpdate(std::cin);
-	CraftCatalogue(catalogue, query.base_request_);
+	BuildCatalogue(catalogue, query.base_request_, query.routing_settings_);
+    catalogue.BuildGraph();
     std::string map_buses_and_stopes = MapRenderer(catalogue, query.parametr_);
 	RequestHandler(catalogue, query.stat_request_,map_buses_and_stopes);
 	return 0;

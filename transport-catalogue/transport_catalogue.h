@@ -1,11 +1,13 @@
 #pragma once
 
 #include "geo.h"
+#include "graph.h"
 
 #include <algorithm>
 #include <deque>
 #include <iomanip>
 #include <iostream>
+#include <numeric>
 #include <set>
 #include <sstream>
 #include <string>
@@ -19,11 +21,18 @@ namespace transport_guide
 {
 	namespace catalogue
 	{
+		struct RoutingSettings
+		{
+			double bus_wait_time_ = 0.0;
+			double bus_velocity_ = 0.0;
+		};
+
 		class TransportCatalogue
 		{
 		public:
 			struct Stop
 			{
+				size_t id_ = 0;
 				std::string name_stop_ = {};
 				geo::Coordinates coordinates_ = {};
 				std::set<std::string_view> buses = {};
@@ -32,7 +41,7 @@ namespace transport_guide
 			{
 				std::string name_bus_ = {};
 				std::vector<Stop*> stops_ = {};
-				bool is_roundtrip_ = false;	// json
+				bool is_roundtrip_ = false;
 			};
 			struct BusInfo
 			{
@@ -73,13 +82,21 @@ namespace transport_guide
 			std::vector<TransportCatalogue::Stop*> GetSortedStopsByName();
 
 			std::vector<geo::Coordinates> GetAllStopCoordinates() const;
+			void BuildGraph();
 
+			const graph::DirectedWeightedGraph<double>& GetGraph() const;
+
+			void SetRoutingSettings(RoutingSettings routing_settings);
+
+			const RoutingSettings& GetRoutingSettings() const;
 		private:
 			std::deque<Stop> stops_;
 			std::unordered_map<std::string_view, Stop*> index_stops_;
 			std::deque<Bus> buses_;
 			std::unordered_map<std::string_view, Bus*> index_buses_;
 			std::unordered_map<std::pair<Stop*, Stop*>, int, StopsHasher> distance_;
+			RoutingSettings routing_settings_;
+			graph::DirectedWeightedGraph<double> graph_;
 		};
 	}
 }
