@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 
         DataRequests query = ReaderInputCatalogueUpdate(std::cin);
         BuildCatalogue(catalogue, query.base_request_, query.routing_settings_, query.parametr_);
-        SerializationToFile(query.save_path_, catalogue);    // Cериализация в файл
+        SerializationToFile(query.save_path_, catalogue);
     }
     else if (mode == "process_requests"sv)
     {

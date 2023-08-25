@@ -120,7 +120,11 @@ namespace transport_guide
 
 			const RoutingSettings& GetRoutingSettings() const;
 
-			void SerializationToFile(const std::string& file) const;
+			const std::deque<Stop>& GetStops() const;
+
+			const std::deque<Bus>& GetBuses() const;
+
+			const std::unordered_map<std::pair<Stop*, Stop*>, int, StopsHasher>& GetDistance() const;
 
 		private:
 			std::deque<Stop> stops_;

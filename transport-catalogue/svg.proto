@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package transport_guide_catalogue;
+
+message Point
+{
+    double x = 1;
+    double y = 2;
+}
