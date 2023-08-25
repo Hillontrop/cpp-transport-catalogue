@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <filesystem>
 
 class Request
 {
@@ -49,38 +50,23 @@ public:
     std::string to_stop;
 };
 
-struct MapParameter
-{
-    double width_;
-    double height_;
-    double padding_;
-    double line_width_;
-    double stop_radius_;
-    int bus_label_font_size_;
-    svg::Point bus_label_offset_;
-    int stop_label_font_size_;
-    svg::Point stop_label_offset_;
-    svg::Color underlayer_color_;
-    double underlayer_width_;
-    std::vector<svg::Color> color_palette_;
-};
-
 struct DataRequests
 {
     std::vector<BaseRequest> base_request_;
-    MapParameter parametr_;
+    transport_guide::catalogue::TransportCatalogue::MapParameter parametr_;
     transport_guide::catalogue::RoutingSettings routing_settings_;
     std::vector<StatRequest> stat_request_;
+    std::string save_path_;
 };
 
 std::vector<BaseRequest> ReaderBaseRequests(const json::Node& data);
 
 std::vector<StatRequest> ReaderStatRequests(const json::Node& data);
 
-MapParameter ReaderRenderSettings(const json::Node& data);
+transport_guide::catalogue::TransportCatalogue::MapParameter ReaderRenderSettings(const json::Node& data);
 
-DataRequests ReaderInputCatalogueUpdate(std::istream& input);   
+DataRequests ReaderInputCatalogueUpdate(std::istream& input);   // Приняли поток выдали вектор запросов
 
-transport_guide::catalogue::TransportCatalogue& BuildCatalogue(transport_guide::catalogue::TransportCatalogue& catalogue, const std::vector<BaseRequest>& requests, const transport_guide::catalogue::RoutingSettings& routing_settings);
+transport_guide::catalogue::TransportCatalogue& BuildCatalogue(transport_guide::catalogue::TransportCatalogue& catalogue, const std::vector<BaseRequest>& requests, const transport_guide::catalogue::RoutingSettings& routing_settings, const transport_guide::catalogue::TransportCatalogue::MapParameter& map_parameter);
 
 std::vector<transport_guide::catalogue::TransportCatalogue::Stop*> SplitIntoStops(transport_guide::catalogue::TransportCatalogue& catalogue, const std::vector<std::string>& stops, bool is_roundtrip);

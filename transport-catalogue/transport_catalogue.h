@@ -2,6 +2,7 @@
 
 #include "geo.h"
 #include "graph.h"
+#include "svg.h"
 
 #include <algorithm>
 #include <deque>
@@ -15,6 +16,9 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <fstream>
+
+#include <transport_catalogue.pb.h>
 
 
 namespace transport_guide
@@ -30,6 +34,23 @@ namespace transport_guide
 		class TransportCatalogue
 		{
 		public:
+			struct MapParameter
+			{
+				double width_;
+				double height_;
+				double padding_;
+				double line_width_;
+				double stop_radius_;
+				int bus_label_font_size_;
+				svg::Point bus_label_offset_;
+				int stop_label_font_size_;
+				svg::Point stop_label_offset_;
+				svg::Color underlayer_color_;
+				double underlayer_width_;
+				std::vector<svg::Color> color_palette_;
+			};
+
+
 			struct Stop
 			{
 				size_t id_ = 0;
@@ -63,6 +84,8 @@ namespace transport_guide
 
 			void AddStop(const std::string& name_stop, const geo::Coordinates& coordinates);	// Добавить остановку
 
+			void AddStop(const std::string& name_stop, const geo::Coordinates& coordinates, size_t id);
+
 			void AddBus(const std::string& name_bus, const std::vector<Stop*> stops, bool is_roundtrip);	// Добавить маршрут
 
 			void SetDistanceBetweenStops(const std::string& name_stop_first, const std::string& name_stop_second, const int& distance);	// Добавить расстояние между остановками
@@ -82,13 +105,23 @@ namespace transport_guide
 			std::vector<TransportCatalogue::Stop*> GetSortedStopsByName();
 
 			std::vector<geo::Coordinates> GetAllStopCoordinates() const;
+
 			void BuildGraph();
 
+			void SetGraph(graph::DirectedWeightedGraph<double> graph);
+
 			const graph::DirectedWeightedGraph<double>& GetGraph() const;
+
+			void SetMapParameter(MapParameter map_parameter);
+
+			const MapParameter& GetMapParameter() const;
 
 			void SetRoutingSettings(RoutingSettings routing_settings);
 
 			const RoutingSettings& GetRoutingSettings() const;
+
+			void SerializationToFile(const std::string& file) const;
+
 		private:
 			std::deque<Stop> stops_;
 			std::unordered_map<std::string_view, Stop*> index_stops_;
@@ -97,6 +130,7 @@ namespace transport_guide
 			std::unordered_map<std::pair<Stop*, Stop*>, int, StopsHasher> distance_;
 			RoutingSettings routing_settings_;
 			graph::DirectedWeightedGraph<double> graph_;
+			MapParameter map_parameter_;
 		};
 	}
 }

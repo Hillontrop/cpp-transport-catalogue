@@ -92,19 +92,18 @@ private:
     double zoom_coeff_ = 0;
 };
 
-void AddRouteOnMap(svg::Document& documents, std::vector<svg::Text>& texts_buses, transport_guide::catalogue::TransportCatalogue::Bus* const& bus, const SphereProjector proj, const MapParameter& parametr, unsigned int& number_color);
+void AddRouteOnMap(svg::Document& documents, std::vector<svg::Text>& texts_buses, transport_guide::catalogue::TransportCatalogue::Bus* const& bus, const SphereProjector proj, const transport_guide::catalogue::TransportCatalogue::MapParameter& parametr, unsigned int& number_color);
 
-void AddStopOnMap(std::vector<svg::Circle>& circles_stops, std::vector<svg::Text>& texts_stops, transport_guide::catalogue::TransportCatalogue::Stop* const& stop, const SphereProjector proj, const MapParameter& parametr);
+void AddStopOnMap(std::vector<svg::Circle>& circles_stops, std::vector<svg::Text>& texts_stops, transport_guide::catalogue::TransportCatalogue::Stop* const& stop, const SphereProjector proj, const transport_guide::catalogue::TransportCatalogue::MapParameter& parametr);
 
-std::string MapRenderer(transport_guide::catalogue::TransportCatalogue& catalogue, const MapParameter& parametr);
+std::string MapRenderer(transport_guide::catalogue::TransportCatalogue& catalogue);
 
-svg::Polyline DrawRoute(const transport_guide::catalogue::TransportCatalogue::Bus* const bus, const MapParameter& parametr, const SphereProjector& proj, unsigned int number_color);
+svg::Polyline DrawRoute(const transport_guide::catalogue::TransportCatalogue::Bus* const bus, const transport_guide::catalogue::TransportCatalogue::MapParameter& parametr, const SphereProjector& proj, unsigned int number_color);
 
-// 2/3
-svg::Text DrawSubstrateBus(const transport_guide::catalogue::TransportCatalogue::Bus* const bus, const MapParameter& parametr, const SphereProjector& proj);
+svg::Text DrawSubstrateBus(const transport_guide::catalogue::TransportCatalogue::Bus* const bus, const transport_guide::catalogue::TransportCatalogue::MapParameter& parametr, const SphereProjector& proj);
 
-svg::Text DrawTextBus(const transport_guide::catalogue::TransportCatalogue::Bus* const bus, const MapParameter& parametr, const SphereProjector& proj, unsigned int number_color);
+svg::Text DrawTextBus(const transport_guide::catalogue::TransportCatalogue::Bus* const bus, const transport_guide::catalogue::TransportCatalogue::MapParameter& parametr, const SphereProjector& proj, unsigned int number_color);
 
-svg::Text DrawSubstrateStop(const transport_guide::catalogue::TransportCatalogue::Stop* const stop, const MapParameter& parametr, const SphereProjector& proj);
+svg::Text DrawSubstrateStop(const transport_guide::catalogue::TransportCatalogue::Stop* const stop, const transport_guide::catalogue::TransportCatalogue::MapParameter& parametr, const SphereProjector& proj);
 
-svg::Text DrawTextStop(const transport_guide::catalogue::TransportCatalogue::Stop* const stop, const MapParameter& parametr, const SphereProjector& proj);
+svg::Text DrawTextStop(const transport_guide::catalogue::TransportCatalogue::Stop* const stop, const transport_guide::catalogue::TransportCatalogue::MapParameter& parametr, const SphereProjector& proj);

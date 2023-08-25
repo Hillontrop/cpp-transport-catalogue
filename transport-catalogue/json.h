@@ -91,7 +91,7 @@ namespace json
 
             return std::get<Array>(*this);
         }
-        Array& AsArray()    // +
+        Array& AsArray()
         {
             using namespace std::literals;
             if (!IsArray())
@@ -131,7 +131,7 @@ namespace json
 
             return std::get<Dict>(*this);
         }
-        Dict& AsDict()  // +
+        Dict& AsDict()
         {
             using namespace std::literals;
             if (!IsDict())

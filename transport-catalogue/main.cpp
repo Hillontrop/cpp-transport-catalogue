@@ -2,42 +2,52 @@
 #include "json_reader.h"
 #include "request_handler.h"
 #include "map_renderer.h"
+#include "serialization.h"
 
-
-#include <iostream>
-#include <sstream>
-#include <fstream>
 #include <string>
+#include <fstream>
+#include <iostream>
+#include <string_view>
+#include <filesystem>
 
+using namespace std::literals;
+using namespace transport_guide;
 
-int main()
+void PrintUsage(std::ostream& stream = std::cerr)
 {
-    //setlocale(LC_ALL,"ru");
-    //std::ifstream file("s10_final_opentest_1.txt"); // Открытие файла для чтения
-    //std::stringstream input;
-    //if (file)
-    //{
-    //    input << file.rdbuf(); // Чтение содержимого файла в поток input
-    //    file.close(); // Закрытие файла
-    //}
-    //else
-    //{
-    //    std::cout << "Ошибка при открытии файла." << std::endl;
-    //    return 1;
-    //}
+    stream << "Usage: transport_catalogue [make_base|process_requests]\n"sv;
+}
 
-//    	std::string str = R"()";
-//    	std::istringstream input(str);
+int main(int argc, char* argv[])
+{
+    if (argc != 2)
+    {
+        PrintUsage();
+        return 1;
+    }
 
+    const std::string_view mode(argv[1]);
 
-	using namespace transport_guide;
+    if (mode == "make_base"sv)
+    {
+        catalogue::TransportCatalogue catalogue;
 
-	catalogue::TransportCatalogue catalogue;
+        DataRequests query = ReaderInputCatalogueUpdate(std::cin);
+        BuildCatalogue(catalogue, query.base_request_, query.routing_settings_, query.parametr_);
+        SerializationToFile(query.save_path_, catalogue);    // Cериализация в файл
+    }
+    else if (mode == "process_requests"sv)
+    {
+        DataRequests query = ReaderInputCatalogueUpdate(std::cin);
 
-	DataRequests query = ReaderInputCatalogueUpdate(std::cin);
-	BuildCatalogue(catalogue, query.base_request_, query.routing_settings_);
-    catalogue.BuildGraph();
-    std::string map_buses_and_stopes = MapRenderer(catalogue, query.parametr_);
-	RequestHandler(catalogue, query.stat_request_,map_buses_and_stopes);
-	return 0;
+        catalogue::TransportCatalogue catalogue = DeserializationFromFile(query.save_path_);
+        catalogue.BuildGraph();
+        std::string map_buses_and_stopes = MapRenderer(catalogue);
+        RequestHandler(catalogue, query.stat_request_, map_buses_and_stopes);
+    }
+    else
+    {
+        PrintUsage();
+        return 1;
+    }
 }

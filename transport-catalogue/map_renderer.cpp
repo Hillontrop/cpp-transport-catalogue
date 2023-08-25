@@ -8,7 +8,7 @@ bool IsZero(double value)
 }
 
 
-void AddRouteOnMap(svg::Document& documents, std::vector<svg::Text>& texts_buses, transport_guide::catalogue::TransportCatalogue::Bus* const &bus,const SphereProjector proj, const MapParameter& parametr, unsigned int& number_color)
+void AddRouteOnMap(svg::Document& documents, std::vector<svg::Text>& texts_buses, transport_guide::catalogue::TransportCatalogue::Bus* const &bus,const SphereProjector proj, const transport_guide::catalogue::TransportCatalogue::MapParameter& parametr, unsigned int& number_color)
 {
     if (bus->stops_.size() != 0)   // Если остановки есть
     {
@@ -31,7 +31,7 @@ void AddRouteOnMap(svg::Document& documents, std::vector<svg::Text>& texts_buses
     }
 }
 
-void AddStopOnMap(std::vector<svg::Circle>& circles_stops, std::vector<svg::Text>& texts_stops, transport_guide::catalogue::TransportCatalogue::Stop* const& stop, const SphereProjector proj, const MapParameter& parametr)
+void AddStopOnMap(std::vector<svg::Circle>& circles_stops, std::vector<svg::Text>& texts_stops, transport_guide::catalogue::TransportCatalogue::Stop* const& stop, const SphereProjector proj, const transport_guide::catalogue::TransportCatalogue::MapParameter& parametr)
 {
     if (stop->buses.size() != 0)   // Если мфршруты есть
     {
@@ -49,12 +49,13 @@ void AddStopOnMap(std::vector<svg::Circle>& circles_stops, std::vector<svg::Text
     }
 }
 
-std::string MapRenderer(transport_guide::catalogue::TransportCatalogue& catalogue, const MapParameter& parametr)
+std::string MapRenderer(transport_guide::catalogue::TransportCatalogue& catalogue)
 {
     std::vector<geo::Coordinates> geo_coords = catalogue.GetAllStopCoordinates();
     // Создаём проектор сферических координат на карту
-    const SphereProjector proj{ geo_coords.begin(), geo_coords.end(), parametr.width_, parametr.height_, parametr.padding_ };
 
+    transport_guide::catalogue::TransportCatalogue::MapParameter parameter = catalogue.GetMapParameter();
+    const SphereProjector proj{ geo_coords.begin(), geo_coords.end(), parameter.width_, parameter.height_, parameter.padding_ };
 
     svg::Document documents;    // Документы для печати
 
@@ -66,12 +67,12 @@ std::string MapRenderer(transport_guide::catalogue::TransportCatalogue& catalogu
 
     for (const auto& bus : catalogue.GetSortedBusesByName())
     {
-        AddRouteOnMap(documents, texts_buses, bus, proj, parametr, number_color);
+        AddRouteOnMap(documents, texts_buses, bus, proj, parameter, number_color);
     }
 
     for (const auto& stop : catalogue.GetSortedStopsByName())
     {
-        AddStopOnMap(circles_stops, texts_stops, stop, proj, parametr);
+        AddStopOnMap(circles_stops, texts_stops, stop, proj, parameter);
     }
 
    for (const auto&t_b : texts_buses)
@@ -92,7 +93,7 @@ std::string MapRenderer(transport_guide::catalogue::TransportCatalogue& catalogu
 }
 
 
-svg::Polyline DrawRoute(const transport_guide::catalogue::TransportCatalogue::Bus* const bus, const MapParameter& parametr, const SphereProjector& proj, unsigned int number_color)
+svg::Polyline DrawRoute(const transport_guide::catalogue::TransportCatalogue::Bus* const bus, const transport_guide::catalogue::TransportCatalogue::MapParameter& parametr, const SphereProjector& proj, unsigned int number_color)
 {
     svg::Polyline route;
     for (const auto& stop : bus->stops_)
@@ -107,7 +108,7 @@ svg::Polyline DrawRoute(const transport_guide::catalogue::TransportCatalogue::Bu
     return route;
 }
 
-svg::Text DrawSubstrateBus(const transport_guide::catalogue::TransportCatalogue::Bus* const bus, const MapParameter& parametr, const SphereProjector& proj)
+svg::Text DrawSubstrateBus(const transport_guide::catalogue::TransportCatalogue::Bus* const bus, const transport_guide::catalogue::TransportCatalogue::MapParameter& parametr, const SphereProjector& proj)
 {
     svg::Text substrate_bus;
     substrate_bus.SetPosition(proj(bus->stops_[0]->coordinates_));
@@ -125,7 +126,7 @@ svg::Text DrawSubstrateBus(const transport_guide::catalogue::TransportCatalogue:
     return substrate_bus;
 }
 
-svg::Text DrawTextBus(const transport_guide::catalogue::TransportCatalogue::Bus* const bus, const MapParameter& parametr, const SphereProjector& proj, unsigned int number_color)
+svg::Text DrawTextBus(const transport_guide::catalogue::TransportCatalogue::Bus* const bus, const transport_guide::catalogue::TransportCatalogue::MapParameter& parametr, const SphereProjector& proj, unsigned int number_color)
 {
     svg::Text text_bus;
     text_bus.SetPosition(proj(bus->stops_[0]->coordinates_));
@@ -139,7 +140,7 @@ svg::Text DrawTextBus(const transport_guide::catalogue::TransportCatalogue::Bus*
     return text_bus;
 }
 
-svg::Text DrawSubstrateStop(const transport_guide::catalogue::TransportCatalogue::Stop* const stop, const MapParameter& parametr, const SphereProjector& proj)
+svg::Text DrawSubstrateStop(const transport_guide::catalogue::TransportCatalogue::Stop* const stop, const transport_guide::catalogue::TransportCatalogue::MapParameter& parametr, const SphereProjector& proj)
 {
     svg::Text substrate_stop;
     substrate_stop.SetPosition(proj(stop->coordinates_));
@@ -156,7 +157,7 @@ svg::Text DrawSubstrateStop(const transport_guide::catalogue::TransportCatalogue
     return substrate_stop;
 }
 
-svg::Text DrawTextStop(const transport_guide::catalogue::TransportCatalogue::Stop* const stop, const MapParameter& parametr, const SphereProjector& proj)
+svg::Text DrawTextStop(const transport_guide::catalogue::TransportCatalogue::Stop* const stop, const transport_guide::catalogue::TransportCatalogue::MapParameter& parametr, const SphereProjector& proj)
 {
     svg::Text text_stop;
     text_stop.SetPosition(proj(stop->coordinates_));

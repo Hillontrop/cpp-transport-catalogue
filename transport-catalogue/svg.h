@@ -70,7 +70,6 @@ namespace svg
         return out;
     }
 
-
 // +++++++++++++++++++++++++++++ class PathProps begin +++++++++++++++++++++++++++++ //
     template<typename Owner>
     class PathProps

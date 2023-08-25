@@ -11,6 +11,12 @@ namespace transport_guide
 			index_stops_[stops_.back().name_stop_] = &stops_.back();
 		}
 
+		void TransportCatalogue::AddStop(const std::string& name_stop, const geo::Coordinates& coordinates, size_t id)
+		{
+			stops_.push_back({ id, name_stop, coordinates });
+			index_stops_[stops_.back().name_stop_] = &stops_.back();
+		}
+
 		void TransportCatalogue::AddBus(const std::string& name_bus, const std::vector<Stop*> stops, bool is_roundtrip)	// Добавить маршрут
 		{
 			buses_.push_back({ name_bus, stops, is_roundtrip });
@@ -204,9 +210,109 @@ namespace transport_guide
 			routing_settings_ = std::move(routing_settings);
 		}
 
+		void TransportCatalogue::SetMapParameter(MapParameter map_parameter)
+		{
+			map_parameter_ = std::move(map_parameter);
+		}
+
+		void TransportCatalogue::SetGraph(graph::DirectedWeightedGraph<double> graph)
+		{
+			graph_ = std::move(graph);
+		}
+
 		const RoutingSettings& TransportCatalogue::GetRoutingSettings() const
 		{
 			return routing_settings_;
+		}
+
+		const TransportCatalogue::MapParameter& TransportCatalogue::GetMapParameter() const
+		{
+			return map_parameter_;
+		}
+
+		void TransportCatalogue::SerializationToFile(const std::string& file) const
+		{
+			std::ofstream out(file, std::ios::out | std::ios::binary);
+
+			if (!out.is_open())
+			{
+				std::cerr << "Failed to open file for writing: " << file << std::endl;
+				return;
+			}
+
+			transport_guide_catalogue::TransportCatalogue catalogue_proto;
+
+			// Преобразование остановок
+			for (const auto stop : stops_)
+			{
+				transport_guide_catalogue::Stop* stop_proto = catalogue_proto.add_stops();
+				stop_proto->set_id(stop.id_);
+				stop_proto->set_name_stop(stop.name_stop_);
+
+				transport_guide_catalogue::Coordinates* coordinates_proto = stop_proto->mutable_coordinates();
+				coordinates_proto->set_lat(stop.coordinates_.lat);
+				coordinates_proto->set_lng(stop.coordinates_.lng);
+			}
+
+			// Преобразование автобусов
+			for (const auto& bus : buses_)
+			{
+				transport_guide_catalogue::Bus* bus_proto = catalogue_proto.add_buses();
+				bus_proto->set_name_bus(bus.name_bus_);
+				bus_proto->set_is_roundtrip(bus.is_roundtrip_);
+
+				for (const Stop* stop : bus.stops_)
+				{
+					bus_proto->add_stops(stop->name_stop_);
+				}
+			}
+
+			// Преобразование дистанций
+			for (const auto& [from_to, distance] : distance_)
+			{
+				transport_guide_catalogue::Distance* distance_proto = catalogue_proto.add_distances();
+				distance_proto->set_name_stop_from(from_to.first->name_stop_);
+				distance_proto->set_name_stop_to(from_to.second->name_stop_);
+				distance_proto->set_distance(distance);
+			}
+
+			// Добавляем данные из MapParameter
+			TransportCatalogue::MapParameter parameter = GetMapParameter();
+			transport_guide_catalogue::MapParameter* map_parameter_proto = catalogue_proto.mutable_map_parameter();
+			map_parameter_proto->set_width(parameter.width_);
+			map_parameter_proto->set_height(parameter.height_);
+			map_parameter_proto->set_padding(parameter.padding_);
+			map_parameter_proto->set_line_width(parameter.line_width_);
+			map_parameter_proto->set_stop_radius(parameter.stop_radius_);
+			map_parameter_proto->set_bus_label_font_size(parameter.bus_label_font_size_);
+
+			map_parameter_proto->mutable_bus_label_offset()->set_x(parameter.bus_label_offset_.x);
+			map_parameter_proto->mutable_bus_label_offset()->set_y(parameter.bus_label_offset_.y);
+
+			map_parameter_proto->set_stop_label_font_size(parameter.stop_label_font_size_);
+
+			map_parameter_proto->mutable_stop_label_offset()->set_x(parameter.stop_label_offset_.x);
+			map_parameter_proto->mutable_stop_label_offset()->set_y(parameter.stop_label_offset_.y);
+
+			map_parameter_proto->set_underlayer_color(parameter.underlayer_color_);
+			map_parameter_proto->set_underlayer_width(parameter.underlayer_width_);
+
+			// Добавляем цвета палитры
+			for (const auto& color : parameter.color_palette_)
+			{
+				map_parameter_proto->add_color_palette(color);
+			}
+			
+			// Добавляем настройки маршрутов
+			transport_guide_catalogue::RoutingSettings* routing_settings_proto = catalogue_proto.mutable_routing_settings();
+			routing_settings_proto->set_bus_wait_time(routing_settings_.bus_wait_time_);
+			routing_settings_proto->set_bus_velocity(routing_settings_.bus_velocity_);
+
+			// Сериализация в файл
+			std::string serialized_data;
+			catalogue_proto.SerializeToString(&serialized_data);
+			out.write(serialized_data.c_str(), serialized_data.size());
+			out.close();
 		}
 	}
 }

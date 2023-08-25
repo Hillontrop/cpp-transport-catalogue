@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package transport_guide_catalogue;
+
+message Coordinates
+{
+    double lat = 1;
+	double lng = 2;
+}
+
+message Stop
+{
+    int32 id = 1;
+    string name_stop = 2;
+	Coordinates coordinates = 3;
+}
+
+message Bus
+{
+    string name_bus = 1;
+	repeated string stops = 2;
+	bool is_roundtrip = 3;
+}
+
+message BusInfo
+{
+	int32 count_stops = 1;
+	int32 unique_stops = 2;
+	int32 route_length = 3;
+	double curvature = 4;
+}
+
+message Distance
+{
+	string name_stop_from = 1;
+    string name_stop_to = 2;
+    int32 distance = 3;
+}
+
+message Point
+{
+    double x = 1;
+    double y = 2;
+}
+
+message MapParameter
+{
+    double width = 1;
+    double height = 2;
+    double padding = 3;
+    double line_width = 4;
+    double stop_radius = 5;
+    int32 bus_label_font_size = 6;
+    Point bus_label_offset = 7;
+    int32 stop_label_font_size = 8;
+    Point stop_label_offset = 9;
+    string underlayer_color = 10;
+    double underlayer_width = 11;
+    repeated string color_palette = 12;
+}
+
+message RoutingSettings
+{
+    double bus_wait_time = 1;
+    double bus_velocity = 2;
+}
+
+message TransportCatalogue
+{
+    repeated Stop stops = 1;
+	repeated Bus buses = 2;
+	repeated Distance distances = 3;
+	MapParameter map_parameter = 4;
+	RoutingSettings routing_settings = 5;
+    DirectedWeightedGraph directed_weighted_graph = 6;
+}

@@ -126,9 +126,9 @@ std::vector<StatRequest> ReaderStatRequests(const json::Node& data)
     return v_stat_request;
 }
 
-MapParameter ReaderRenderSettings(const json::Node& data)
+transport_guide::catalogue::TransportCatalogue::MapParameter ReaderRenderSettings(const json::Node& data)
 {
-    MapParameter parametrs;
+    transport_guide::catalogue::TransportCatalogue::MapParameter parametrs;
     for (const auto& [key_type, value] : data.AsDict()) // Идем по Dict{string,Node} 
     {
         if (key_type == "width")
@@ -290,7 +290,6 @@ transport_guide::catalogue::RoutingSettings ReaderRoutingSettings(const json::No
     return routing_settings;
 }
 
-
 DataRequests ReaderInputCatalogueUpdate(std::istream& input)   // Приняли поток выдали вектор запросов
 {
     DataRequests queue_request;
@@ -326,6 +325,20 @@ DataRequests ReaderInputCatalogueUpdate(std::istream& input)   // Приняли поток 
         {
             queue_request.routing_settings_ = std::move(ReaderRoutingSettings(data));
         }
+        else if (type_request == "serialization_settings")
+        {
+            for (const auto& [key_type, value] : data.AsDict()) // "file": "transport_catalogue.db"
+            {
+                if (key_type == "file")
+                {
+                    queue_request.save_path_ = value.AsString();   // -> тут должен быть path
+                }
+                else
+                {
+                    throw json::ParsingError("Parsing error");
+                }
+            }
+        }
         else
         {
             throw json::ParsingError("Parsing error");
@@ -334,7 +347,7 @@ DataRequests ReaderInputCatalogueUpdate(std::istream& input)   // Приняли поток 
     return queue_request;
 }
 
-transport_guide::catalogue::TransportCatalogue& BuildCatalogue(transport_guide::catalogue::TransportCatalogue& catalogue, const std::vector<BaseRequest>& requests, const transport_guide::catalogue::RoutingSettings& routing_settings)
+transport_guide::catalogue::TransportCatalogue& BuildCatalogue(transport_guide::catalogue::TransportCatalogue& catalogue, const std::vector<BaseRequest>& requests, const transport_guide::catalogue::RoutingSettings& routing_settings, const transport_guide::catalogue::TransportCatalogue::MapParameter& map_parameter)
 {
     for (const auto& base_requests : requests)
     {
@@ -367,6 +380,7 @@ transport_guide::catalogue::TransportCatalogue& BuildCatalogue(transport_guide::
             }
         }
     }
+    catalogue.SetMapParameter(map_parameter);
     catalogue.SetRoutingSettings(routing_settings);
     return catalogue;
 }
